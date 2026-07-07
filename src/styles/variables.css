@@ -1,0 +1,269 @@
+/*
+ * Electroplace — "Warm Premium Concept Store" design tokens.
+ * Warm-first, slightly-dark boutique palette. Rich graphite/espresso surfaces,
+ * warm paper accents, and a single glowing amber accent that makes prices,
+ * deals and CTAs feel premium rather than shouty. Every token has a matching
+ * light-mode variant (warm paper backgrounds, espresso text, softened amber),
+ * but warm-dark is the primary, first-class theme.
+ *
+ * Consumed by @theme in globals.css so Tailwind utilities pick these up
+ * automatically. Legacy names are aliased so older components keep working.
+ */
+
+/* ── DEFAULT (warm-dark) — primary, first-class theme ─────────────── */
+:root {
+  /* ── Brand ──────────────────────────────────────────────────────────── */
+  --color-primary: #E8A13A;          /* glowing amber / honey — CTAs, price emphasis */
+  --color-primary-hover: #F1B558;
+  --color-primary-tint: #3A2E1C;     /* soft warm fill on dark */
+  --color-primary-glow: rgba(232, 161, 58, 0.24);
+  --color-primary-fg: #1A1714;
+
+  --color-accent: #E8A13A;           /* alias — accent === primary amber */
+  --color-accent-hover: #F1B558;
+  --color-accent-tint: #3A2E1C;
+  --color-accent-fg: #1A1714;
+
+  --color-bronze: #B5714A;           /* secondary — eyebrows, secondary highlights */
+  --color-bronze-hover: #C88657;
+  --color-bronze-tint: rgba(181, 113, 74, 0.14);
+
+  --color-teal: #8A9A5B;             /* muted olive-sage — success, in-stock */
+  --color-teal-hover: #9BAB6C;
+  --color-teal-tint: rgba(138, 154, 91, 0.14);
+
+  --color-coral: #E8A13A;            /* deals routed to amber — premium not aggressive */
+  --color-coral-hover: #F1B558;
+  --color-coral-tint: rgba(232, 161, 58, 0.14);
+
+  --color-violet: #B5714A;           /* legacy alias → bronze */
+  --color-violet-hover: #C88657;
+  --color-violet-tint: rgba(181, 113, 74, 0.14);
+
+  --color-secondary: #26221E;
+  --color-price: var(--color-primary);
+  --color-cta: var(--color-primary);
+  --color-cta-hover: var(--color-primary-hover);
+  --color-header: #1A1714;
+  --color-header-secondary: #221E1A;
+
+  /* Legacy aliases used across older components */
+  --color-accent-light: var(--color-accent-tint);
+  --color-accent-2: var(--color-bronze);
+  --color-accent-2-hover: var(--color-bronze-hover);
+  --color-accent-3: var(--color-teal);
+  --color-accent-4: #A79B8C;
+
+  /* ── Surfaces (warm-dark — graphite / espresso) ─────────────────── */
+  --color-bg: #1A1714;               /* warm graphite — page bg */
+  --color-bg-elevated: #26221E;      /* warm espresso — cards, dialogs */
+  --color-bg-secondary: #221E1A;     /* lifted section tint */
+  --color-bg-tertiary: #2C271F;      /* muted warm panel */
+  --color-bg-warm: #221E1A;
+  --color-bg-cool: #26221E;
+
+  /* ── Text (warm-dark) ───────────────────────────────────────────── */
+  --color-text: #F5F0E8;             /* warm off-white ink */
+  --color-text-secondary: #A79B8C;   /* muted text */
+  --color-text-tertiary: #7A6F62;
+  --color-text-inverse: #201913;
+
+  /* ── Lines (warm-dark) ──────────────────────────────────────────── */
+  --color-border: #3A342D;           /* warm low-contrast brown-grey */
+  --color-border-hover: #4C443A;
+  --color-border-strong: #5E5347;
+  --color-hairline: rgba(245, 240, 232, 0.08);
+
+  /* ── Status (warm-dark) ─────────────────────────────────────────── */
+  --color-success: #8A9A5B;          /* olive-sage — "in stock" */
+  --color-success-light: rgba(138, 154, 91, 0.14);
+  --color-warning: #E8A13A;
+  --color-warning-light: rgba(232, 161, 58, 0.14);
+  --color-danger: #E8A13A;           /* deals routed to amber, not red */
+  --color-danger-light: rgba(232, 161, 58, 0.10);
+  --color-info: #B5714A;
+
+  /* ── Elevation — warm, hairline-first ───────────────────────────── */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.40);
+  --shadow-lg: 0 14px 34px rgba(0, 0, 0, 0.45);
+  --shadow-xl: 0 26px 60px rgba(0, 0, 0, 0.50);
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --shadow-card-hover: 0 10px 28px rgba(232, 161, 58, 0.18);
+  --shadow-accent: 0 10px 24px rgba(232, 161, 58, 0.30);
+  --shadow-warm: 0 10px 24px rgba(181, 113, 74, 0.28);
+  --shadow-glow-amber: 0 0 28px rgba(232, 161, 58, 0.42);
+  --shadow-glow-azure: 0 0 28px rgba(232, 161, 58, 0.42);   /* legacy alias */
+  --shadow-glow-violet: 0 0 28px rgba(181, 113, 74, 0.42);  /* legacy alias */
+
+  /* ── Gradients ──────────────────────────────────────────────────── */
+  --gradient-primary: linear-gradient(135deg, #E8A13A 0%, #B5714A 100%);
+  --gradient-accent: linear-gradient(135deg, #E8A13A 0%, #C88657 100%);
+  --gradient-warm: linear-gradient(180deg, #26221E 0%, #1A1714 100%);
+  --gradient-cool: linear-gradient(180deg, #221E1A 0%, #1A1714 100%);
+  --gradient-hero: linear-gradient(135deg, #1A1714 0%, #2C271F 60%, #3A2E1C 100%);
+  --gradient-badge: linear-gradient(135deg, #E8A13A 0%, #B5714A 100%);
+  --gradient-mint: linear-gradient(135deg, rgba(232, 161, 58, 0.12) 0%, rgba(181, 113, 74, 0.10) 100%);
+  --gradient-sunset: linear-gradient(135deg, rgba(232, 161, 58, 0.10) 0%, rgba(181, 113, 74, 0.10) 100%);
+  --gradient-electric: linear-gradient(135deg, #E8A13A 0%, #B5714A 100%);
+  --gradient-card-hover: linear-gradient(180deg, rgba(232, 161, 58, 0.06) 0%, rgba(181, 113, 74, 0.06) 100%);
+
+  /* ── Radii ──────────────────────────────────────────────────────── */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.625rem;
+  --radius-lg: 0.875rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.25rem;
+  --radius-pill: 9999px;
+
+  /* ── Layout ─────────────────────────────────────────────────────── */
+  --max-width: 1280px;
+  --header-height: 152px;
+  --announcement-height: 36px;
+
+  /* ── Type — refined editorial pairing ───────────────────────────── */
+  --font-sans: "Inter", var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Fraunces", "Newsreader", ui-serif, Georgia, serif;
+  --font-serif: "Fraunces", "Newsreader", ui-serif, Georgia, serif;
+  --font-mono: "JetBrains Mono", var(--font-geist-mono), ui-monospace, monospace;
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* ── Promo tints ────────────────────────────────────────────────── */
+  --promo-bg-blue: rgba(232, 161, 58, 0.12);
+  --promo-bg-warm: rgba(181, 113, 74, 0.10);
+  --promo-bg-green: rgba(138, 154, 91, 0.10);
+  --promo-bg-purple: rgba(181, 113, 74, 0.14);
+  --promo-bg-pink: rgba(232, 161, 58, 0.10);
+
+  color-scheme: dark;
+}
+
+/* ── LIGHT-MODE OPT-IN ────────────────────────────────────────────
+   Warm paper backgrounds, espresso text, softened amber accents.
+   Activated with .light or [data-theme="light"].
+*/
+[data-theme="light"],
+.light {
+  /* Brand — softened amber for paper surfaces */
+  --color-primary: #B5714A;
+  --color-primary-hover: #A0603C;
+  --color-primary-tint: rgba(181, 113, 74, 0.12);
+  --color-primary-glow: rgba(181, 113, 74, 0.24);
+  --color-primary-fg: #F4EFE8;
+
+  --color-accent: #B5714A;
+  --color-accent-hover: #A0603C;
+  --color-accent-tint: rgba(181, 113, 74, 0.12);
+  --color-accent-fg: #F4EFE8;
+
+  --color-bronze: #B5714A;
+  --color-bronze-hover: #A0603C;
+  --color-bronze-tint: rgba(181, 113, 74, 0.12);
+
+  --color-teal: #6C7A47;
+  --color-teal-hover: #5B6B39;
+  --color-teal-tint: rgba(108, 122, 71, 0.14);
+
+  --color-coral: #B5714A;
+  --color-coral-hover: #A0603C;
+  --color-coral-tint: rgba(181, 113, 74, 0.14);
+
+  --color-violet: #B5714A;
+  --color-violet-hover: #A0603C;
+  --color-violet-tint: rgba(181, 113, 74, 0.14);
+
+  --color-secondary: #F4EFE8;
+  --color-price: var(--color-primary);
+  --color-cta: var(--color-primary);
+  --color-cta-hover: var(--color-primary-hover);
+  --color-header: #F4EFE8;
+  --color-header-secondary: #EAE3D7;
+
+  --color-accent-light: var(--color-accent-tint);
+  --color-accent-2: var(--color-bronze);
+  --color-accent-2-hover: var(--color-bronze-hover);
+  --color-accent-3: var(--color-teal);
+  --color-accent-4: #6A5A4A;
+
+  /* Surfaces — warm paper */
+  --color-bg: #F4EFE8;               /* warm paper */
+  --color-bg-elevated: #FFFDF9;      /* cards */
+  --color-bg-secondary: #EAE3D7;     /* alternating warm section */
+  --color-bg-tertiary: #DFD6C7;
+  --color-bg-warm: #EAE3D7;
+  --color-bg-cool: #F4EFE8;
+
+  /* Text — deep espresso */
+  --color-text: #201913;
+  --color-text-secondary: #6A5A4A;
+  --color-text-tertiary: #8F8172;
+  --color-text-inverse: #F4EFE8;
+
+  /* Lines */
+  --color-border: #D6CBB8;
+  --color-border-hover: #B9AC97;
+  --color-border-strong: #9E907A;
+  --color-hairline: rgba(32, 25, 19, 0.08);
+
+  /* Status */
+  --color-success: #6C7A47;
+  --color-success-light: rgba(108, 122, 71, 0.14);
+  --color-warning: #B5714A;
+  --color-warning-light: rgba(181, 113, 74, 0.14);
+  --color-danger: #B5714A;
+  --color-danger-light: rgba(181, 113, 74, 0.10);
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(32, 25, 19, 0.04);
+  --shadow-md: 0 4px 14px rgba(32, 25, 19, 0.06);
+  --shadow-lg: 0 12px 32px rgba(32, 25, 19, 0.08);
+  --shadow-xl: 0 24px 60px rgba(32, 25, 19, 0.10);
+  --shadow-card: 0 1px 2px rgba(32, 25, 19, 0.04);
+  --shadow-card-hover: 0 8px 24px rgba(181, 113, 74, 0.16);
+  --shadow-accent: 0 10px 24px rgba(181, 113, 74, 0.20);
+  --shadow-warm: 0 10px 24px rgba(181, 113, 74, 0.18);
+  --shadow-glow-amber: 0 0 24px rgba(181, 113, 74, 0.28);
+  --shadow-glow-azure: 0 0 24px rgba(181, 113, 74, 0.28);
+  --shadow-glow-violet: 0 0 24px rgba(181, 113, 74, 0.28);
+
+  /* Gradients */
+  --gradient-primary: linear-gradient(135deg, #B5714A 0%, #6C7A47 100%);
+  --gradient-accent: linear-gradient(135deg, #B5714A 0%, #A0603C 100%);
+  --gradient-warm: linear-gradient(180deg, #F4EFE8 0%, #EAE3D7 100%);
+  --gradient-cool: linear-gradient(180deg, #EAE3D7 0%, #DFD6C7 100%);
+  --gradient-hero: linear-gradient(135deg, #F4EFE8 0%, #EAE3D7 60%, #DFD6C7 100%);
+  --gradient-badge: linear-gradient(135deg, #B5714A 0%, #6C7A47 100%);
+  --gradient-mint: linear-gradient(135deg, rgba(181, 113, 74, 0.10) 0%, rgba(108, 122, 71, 0.10) 100%);
+  --gradient-sunset: linear-gradient(135deg, rgba(181, 113, 74, 0.06) 0%, rgba(108, 122, 71, 0.06) 100%);
+  --gradient-electric: linear-gradient(135deg, #B5714A 0%, #6C7A47 100%);
+  --gradient-card-hover: linear-gradient(180deg, rgba(181, 113, 74, 0.04) 0%, rgba(108, 122, 71, 0.04) 100%);
+
+  --promo-bg-blue: rgba(181, 113, 74, 0.12);
+  --promo-bg-warm: rgba(108, 122, 71, 0.10);
+  --promo-bg-green: rgba(108, 122, 71, 0.10);
+  --promo-bg-purple: rgba(181, 113, 74, 0.14);
+  --promo-bg-pink: rgba(181, 113, 74, 0.10);
+
+  color-scheme: light;
+}
+
+/* Warm-tone photo smoothing on warm-dark canvas */
+:root img[src*=".jpg"],
+:root img[src*=".jpeg"],
+:root img[src*=".png"],
+:root img[src*=".webp"] {
+  filter: brightness(0.98) contrast(1.02);
+}
+
+[data-theme="light"] img[src*=".jpg"],
+[data-theme="light"] img[src*=".jpeg"],
+[data-theme="light"] img[src*=".png"],
+[data-theme="light"] img[src*=".webp"],
+.light img[src*=".jpg"],
+.light img[src*=".jpeg"],
+.light img[src*=".png"],
+.light img[src*=".webp"] {
+  filter: brightness(1.02) contrast(1.02) saturate(1.04);
+}

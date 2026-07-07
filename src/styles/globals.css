@@ -1,0 +1,323 @@
+@import "tailwindcss";
+@import "./variables.css";
+@import "./animations.css";
+
+/*
+ * Tailwind v4 — CSS-first config.
+ * Exposes the warm-premium design tokens defined in variables.css as Tailwind
+ * theme variables so utilities like `bg-primary`, `text-ink`, `border-line`,
+ * `font-display`, `font-mono` all just work from a single source of truth.
+ */
+
+@theme {
+  --font-sans: "Inter", var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Fraunces", "Newsreader", ui-serif, Georgia, serif;
+  --font-serif: "Fraunces", "Newsreader", ui-serif, Georgia, serif;
+  --font-mono: "JetBrains Mono", var(--font-geist-mono), ui-monospace, monospace;
+
+  /* Semantic colors — canvas & surfaces (warm-dark defaults) */
+  --color-bone: #1A1714;
+  --color-paper: #26221E;
+  --color-cream: #221E1A;
+  --color-surface: #26221E;
+
+  /* Ink / text — warm off-white */
+  --color-ink: #F5F0E8;
+  --color-ink-2: #A79B8C;
+  --color-ink-3: #7A6F62;
+
+  /* Primary — glowing amber / honey */
+  --color-primary: #E8A13A;
+  --color-primary-hover: #F1B558;
+  --color-primary-tint: #3A2E1C;
+  --color-primary-glow: rgba(232, 161, 58, 0.24);
+  --color-primary-fg: #1A1714;
+
+  /* Accent — alias of primary */
+  --color-accent: #E8A13A;
+  --color-accent-hover: #F1B558;
+  --color-accent-tint: #3A2E1C;
+  --color-accent-fg: #1A1714;
+
+  /* Bronze — secondary accent for eyebrows / secondary highlights */
+  --color-bronze: #B5714A;
+  --color-bronze-hover: #C88657;
+  --color-bronze-tint: rgba(181, 113, 74, 0.14);
+
+  /* Olive-sage — success, in-stock */
+  --color-teal: #8A9A5B;
+  --color-teal-hover: #9BAB6C;
+  --color-teal-tint: rgba(138, 154, 91, 0.14);
+
+  /* Deal accent — warm amber pill (not red) */
+  --color-coral: #E8A13A;
+  --color-coral-hover: #F1B558;
+  --color-coral-tint: rgba(232, 161, 58, 0.14);
+
+  /* Legacy alias — routed to bronze */
+  --color-violet: #B5714A;
+  --color-violet-hover: #C88657;
+  --color-violet-tint: rgba(181, 113, 74, 0.14);
+
+  /* Lines */
+  --color-line: #3A342D;
+  --color-line-strong: #5E5347;
+
+  /* Status */
+  --color-success: #8A9A5B;
+  --color-success-tint: rgba(138, 154, 91, 0.14);
+  --color-warning: #E8A13A;
+  --color-warning-tint: rgba(232, 161, 58, 0.14);
+  --color-danger: #E8A13A;
+  --color-danger-tint: rgba(232, 161, 58, 0.10);
+
+  /* Rounded corners */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.625rem;
+  --radius-lg: 0.875rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.25rem;
+
+  /* Container */
+  --container-content: 1280px;
+
+  /* Type scale — editorial display */
+  --text-eyebrow: 0.6875rem;         /* 11 */
+  --text-eyebrow--line-height: 1.2;
+  --text-eyebrow--letter-spacing: 0.20em;
+
+  --text-display: 3rem;              /* 48 */
+  --text-display--line-height: 1.02;
+  --text-display--letter-spacing: -0.02em;
+
+  --text-editorial: 2.25rem;         /* 36 */
+  --text-editorial--line-height: 1.1;
+  --text-editorial--letter-spacing: -0.015em;
+}
+
+/* Light-mode variant activator — opt-in via .light or [data-theme="light"]. */
+@custom-variant light (&:where(.light, .light *, [data-theme="light"], [data-theme="light"] *));
+
+/* Legacy `dark:*` support — since warm-dark is now the default, dark: utilities
+   should match the root. We keep the variant registered so old classnames still
+   compile. */
+@custom-variant dark (&:where(:root, :root *, .dark, .dark *, [data-theme="dark"], [data-theme="dark"] *));
+
+/* ── Base layer ──────────────────────────────────────────────────────── */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  color-scheme: dark;
+}
+
+html[data-theme="light"],
+html.light {
+  color-scheme: light;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "ss01", "cv11";
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+::selection {
+  background-color: var(--color-primary);
+  color: var(--color-primary-fg);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-border-strong);
+}
+
+/* Hide native scrollbar on horizontally-scrolling strips. */
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
+
+/* ── Legacy helpers kept for compatibility ───────────────────────────── */
+
+.section-padding {
+  padding: 4rem 1rem;
+}
+
+@media (min-width: 768px) {
+  .section-padding {
+    padding: 5rem 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .section-padding {
+    padding: 6rem 2rem;
+  }
+}
+
+.section-container {
+  max-width: var(--max-width);
+  margin: 0 auto;
+}
+
+.section-title {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--color-text);
+  line-height: 1.05;
+}
+
+@media (min-width: 768px) {
+  .section-title {
+    font-size: 2.75rem;
+  }
+}
+
+.section-subtitle {
+  font-size: 1rem;
+  color: var(--color-text-secondary);
+  margin-top: 0.75rem;
+  max-width: 560px;
+  line-height: 1.6;
+}
+
+.gradient-text {
+  background: var(--gradient-electric);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* ── Warm-premium surface helpers ────────────────────────────────────── */
+
+.glass {
+  background: rgba(38, 34, 30, 0.72);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  border: 1px solid var(--color-hairline);
+}
+
+[data-theme="light"] .glass,
+.light .glass {
+  background: rgba(255, 253, 249, 0.72);
+  border: 1px solid var(--color-hairline);
+}
+
+.glass-border {
+  border: 1px solid var(--color-hairline);
+}
+
+.hairline {
+  border-color: var(--color-border);
+}
+
+.glow-amber {
+  box-shadow: var(--shadow-glow-amber);
+}
+
+/* Legacy aliases */
+.glow-azure {
+  box-shadow: var(--shadow-glow-amber);
+}
+.glow-violet {
+  box-shadow: var(--shadow-glow-violet);
+}
+
+/* Warm dot-grid — subtle brand texture behind editorial surfaces. */
+.warm-dots {
+  background-image: radial-gradient(rgba(232, 161, 58, 0.10) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+[data-theme="light"] .warm-dots,
+.light .warm-dots {
+  background-image: radial-gradient(rgba(181, 113, 74, 0.12) 1px, transparent 1px);
+}
+
+/* Legacy alias */
+.retail-dots {
+  background-image: radial-gradient(rgba(232, 161, 58, 0.10) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+[data-theme="light"] .retail-dots,
+.light .retail-dots {
+  background-image: radial-gradient(rgba(181, 113, 74, 0.12) 1px, transparent 1px);
+}
+
+/* Warm hairline grid — deep behind hero and editorial surfaces. */
+.tech-grid {
+  background-image:
+    linear-gradient(rgba(232, 161, 58, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(232, 161, 58, 0.05) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+[data-theme="light"] .tech-grid,
+.light .tech-grid {
+  background-image:
+    linear-gradient(rgba(181, 113, 74, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(181, 113, 74, 0.05) 1px, transparent 1px);
+}
+
+/* ── Editorial helpers used across the site ──────────────────────────── */
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.20em;
+  text-transform: uppercase;
+  color: var(--color-bronze);
+}
+
+.editorial-heading {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  font-optical-sizing: auto;
+}
+
+/* Monospaced spec/price/SKU treatment. */
+.spec-value {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
