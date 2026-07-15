@@ -184,14 +184,23 @@ export default function CheckoutPage() {
         }),
       });
 
-      if (!res.ok) throw new Error("Order failed");
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || "Order failed");
+      }
 
-      const order = await res.json();
+      const orderData = await res.json();
       clearCart();
-      toast.success("Order placed successfully!");
-      router.push(`/order/confirmed?orderId=${order.id}`);
-    } catch {
-      toast.error("Failed to place order. Please try again.");
+
+      if (orderData.redirectUrl) {
+        toast.success("Redirecting to payment page...");
+        window.location.href = orderData.redirectUrl;
+      } else {
+        toast.success("Order placed successfully!");
+        router.push(`/order/confirmed?orderId=${orderData.id}`);
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Failed to place order. Please try again.");
     } finally {
       setSubmitting(false);
     }

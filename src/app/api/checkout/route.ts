@@ -5,6 +5,7 @@ import { getSessionUser } from "@/lib/auth";
 import { sendOrderConfirmationEmail, sendOrderInvoiceEmail } from "@/lib/email";
 import { scheduleEmail } from "@/lib/email-jobs";
 import { resolveDiscount, markDiscountUsed } from "@/lib/discounts";
+import { TransfermitAPI } from "@/lib/payments/transfermit";
 
 export async function POST(request: NextRequest) {
   try {
@@ -77,7 +78,7 @@ export async function POST(request: NextRequest) {
         discountCode: discount?.code ?? null,
         discountPercent: discount?.percent ?? null,
         total,
-        paymentMethod: "manual",
+        paymentMethod: "transfermit",
         items: { create: orderItems },
       },
       include: { items: true },
@@ -92,6 +93,80 @@ export async function POST(request: NextRequest) {
         where: { id: item.productId },
         data: { quantity: { decrement: item.quantity } },
       });
+    }
+
+    // Initialize payment on Transfermit
+    let redirectUrl = "";
+    try {
+      const api = new TransfermitAPI();
+
+      const host = request.headers.get("x-forwarded-host") || request.headers.get("host") || process.env.NEXT_PUBLIC_SITE_URL || "localhost:9997";
+      const proto = request.headers.get("x-forwarded-proto") || "http";
+      const baseUrl = `${proto}://${host}`;
+
+      const clientIp = request.headers.get("x-forwarded-for")?.split(",")[0] || request.headers.get("x-real-ip") || "127.0.0.1";
+
+      const paymentData = {
+        amount: total,
+        currency: "EUR",
+        referenceId: order.id,
+        customer: {
+          referenceId: order.id,
+          firstName: validated.shipping.firstName,
+          lastName: validated.shipping.lastName,
+          email: validated.contact.email,
+          phone: validated.contact.phone || undefined,
+          ip: clientIp,
+        },
+        billingAddress: {
+          addressLine1: validated.shipping.address1,
+          addressLine2: validated.shipping.address2 || undefined,
+          city: validated.shipping.city,
+          countryCode: validated.shipping.country,
+          postalCode: validated.shipping.postalCode,
+          state: validated.shipping.province || undefined,
+        },
+        returnUrl: `${baseUrl}/order/confirmed?orderId=${order.id}`,
+        webhookUrl: `${baseUrl}/api/webhooks/transfermit`,
+      };
+
+      const transfermitRes = await api.createPayment(paymentData);
+
+      if (transfermitRes && transfermitRes.result) {
+        const { id: paymentId, redirectUrl: rUrl } = transfermitRes.result;
+
+        // Update order with paymentId
+        await prisma.order.update({
+          where: { id: order.id },
+          data: {
+            paymentId: paymentId,
+          },
+        });
+
+        redirectUrl = rUrl || "";
+      } else {
+        throw new Error("Transfermit did not return a valid result.");
+      }
+    } catch (e) {
+      console.error("Transfermit payment creation failed:", e);
+
+      // Rollback order creation
+      await prisma.order.delete({
+        where: { id: order.id },
+      });
+
+      // Restore stock inventory
+      for (const item of items) {
+        await prisma.product.update({
+          where: { id: item.productId },
+          data: { quantity: { increment: item.quantity } },
+        });
+      }
+
+      return NextResponse.json(
+        { error: "Payment initialization failed. Please try again." },
+        { status: 500 }
+      );
     }
 
     const emailPayload = {
@@ -113,7 +188,7 @@ export async function POST(request: NextRequest) {
     scheduleEmail(`order confirmation ${order.orderNumber}`, () => sendOrderConfirmationEmail(emailPayload));
     scheduleEmail(`order invoice ${order.orderNumber}`, () => sendOrderInvoiceEmail(emailPayload));
 
-    return NextResponse.json(order, { status: 201 });
+    return NextResponse.json({ ...order, redirectUrl }, { status: 201 });
   } catch (error) {
     console.error("Error creating order:", error);
     return NextResponse.json({ error: "Failed to create order" }, { status: 500 });
