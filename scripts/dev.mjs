@@ -1,7 +1,7 @@
 import { spawn, execSync } from "child_process";
 
 const DB_PORTS = [51213, 51214, 51215];
-const NEXT_PORT = 3000;
+const NEXT_PORT = 9997;
 
 function killPort(port) {
   try {
@@ -32,7 +32,7 @@ function startNext() {
   if (nextStarted) return;
   nextStarted = true;
   console.log("[dev] Starting Next.js...\n");
-  const next = spawn("npx", ["next", "dev"], {
+  const next = spawn("npx", ["next", "dev", "-p", NEXT_PORT.toString()], {
     stdio: "inherit",
     env: { ...process.env, FORCE_COLOR: "1" },
   });
@@ -45,7 +45,7 @@ function startNext() {
 db.stdout.on("data", (chunk) => {
   const text = chunk.toString();
   process.stdout.write(`[prisma] ${text}`);
-  if (text.includes("now running") || text.includes("DATABASE_URL")) {
+  if (text.includes("now running") || text.includes("DATABASE_URL") || text.includes("already running")) {
     startNext();
   }
 });
@@ -53,7 +53,7 @@ db.stdout.on("data", (chunk) => {
 db.stderr.on("data", (chunk) => {
   const text = chunk.toString();
   process.stderr.write(`[prisma] ${text}`);
-  if (text.includes("now running") || text.includes("DATABASE_URL")) {
+  if (text.includes("now running") || text.includes("DATABASE_URL") || text.includes("already running")) {
     startNext();
   }
 });
@@ -63,8 +63,12 @@ setTimeout(() => startNext(), 5000);
 
 db.on("exit", (code) => {
   if (!nextStarted) {
-    console.error("[dev] Prisma Postgres exited unexpectedly with code", code);
-    process.exit(1);
+    if (code === 0) {
+      startNext();
+    } else {
+      console.error("[dev] Prisma Postgres exited unexpectedly with code", code);
+      process.exit(1);
+    }
   }
 });
 
