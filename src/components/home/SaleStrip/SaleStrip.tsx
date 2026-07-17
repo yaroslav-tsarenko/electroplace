@@ -5,7 +5,7 @@ import Image from "next/image";
 import { Link } from "@/i18n/routing";
 import { Flame, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion, useInView } from "framer-motion";
-import { formatPrice } from "@/lib/utils/format-price";
+import { PriceDisplay } from "@/components/shared/PriceDisplay/PriceDisplay";
 import { getProductImage, getProductImageFallback } from "@/lib/utils/product-image";
 import { getDiscountPercent, type HomepageProduct } from "@/lib/homepage-products";
 
@@ -98,13 +98,14 @@ export function SaleStrip({ products }: Props) {
                       -{discount}%
                     </span>
                   )}
-                  <div className="aspect-square w-full overflow-hidden rounded-xl bg-[color:var(--color-bg)] p-4">
+                  <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-[rgb(252,252,252)] p-4">
+                    <div aria-hidden className="pointer-events-none absolute inset-0 tech-grid opacity-[0.06]" />
                     <Image
                       src={imgUrl}
                       alt={p.name}
                       width={120}
                       height={100}
-                      className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-105"
+                      className="relative h-full w-full object-contain transition-transform duration-300 group-hover:scale-105"
                       onError={(e) => {
                         (e.target as HTMLImageElement).src = getProductImageFallback("120x100");
                       }}
@@ -113,16 +114,11 @@ export function SaleStrip({ products }: Props) {
                   <h4 className="line-clamp-2 text-sm font-medium text-[color:var(--color-text)]">
                     {p.name}
                   </h4>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-base font-semibold text-[color:var(--color-accent)]">
-                      {formatPrice(Number(p.price))}
-                    </span>
-                    {p.comparePrice && (
-                      <span className="text-xs text-[color:var(--color-text-tertiary)] line-through">
-                        {formatPrice(Number(p.comparePrice))}
-                      </span>
-                    )}
-                  </div>
+                  <PriceDisplay
+                    price={Number(p.price)}
+                    comparePrice={p.comparePrice ? Number(p.comparePrice) : null}
+                    size="sm"
+                  />
                 </Link>
               </motion.div>
             );
