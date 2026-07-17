@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import { Link } from "@/i18n/routing";
 import { useTranslations } from "next-intl";
@@ -36,6 +37,7 @@ export function ProductCard({
 }: ProductCardProps) {
   const t = useTranslations("product");
   const { addItem } = useCart();
+  const [imgError, setImgError] = useState(false);
   const isOnSale = !!(comparePrice && comparePrice > price);
   const discountPct = isOnSale
     ? Math.round(((comparePrice! - price) / comparePrice!) * 100)
@@ -68,20 +70,22 @@ export function ProductCard({
       href={`/product/${slug}`}
       className="group relative flex flex-col overflow-hidden rounded-xl border border-[color:var(--color-line)] bg-[color:var(--color-bg-elevated)] transition-all duration-300 hover:-translate-y-0.5 hover:border-[color:var(--color-primary)]/60 hover:shadow-[0_10px_28px_-8px_rgba(46,125,255,0.35)]"
     >
-      {/* Image area — fixed uniform aspect */}
-      <div className="relative aspect-square overflow-hidden bg-[color:var(--color-bg-secondary)]">
+      {/* Image area — fixed uniform aspect, neutral off-white for photo clarity */}
+      <div className="relative aspect-square overflow-hidden bg-[rgb(252,252,252)]">
         {/* faint tech grid on card image bg */}
-        <div aria-hidden className="absolute inset-0 tech-grid opacity-40" />
-        {imageUrl ? (
+        <div aria-hidden className="absolute inset-0 tech-grid opacity-[0.06]" />
+        {imageUrl && !imgError ? (
           <Image
             src={imageUrl}
             alt={name}
             fill
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
             className="relative z-[1] object-contain p-6 transition-transform duration-500 ease-out group-hover:scale-[1.05]"
+            onError={() => setImgError(true)}
+            unoptimized
           />
         ) : (
-          <div className="relative z-[1] flex h-full w-full flex-col items-center justify-center gap-1 text-[color:var(--color-text-tertiary)]">
+          <div className="relative z-[1] flex h-full w-full flex-col items-center justify-center gap-1 text-neutral-400">
             <ImageOff size={26} strokeWidth={1.5} />
             <span className="text-xs">No image</span>
           </div>

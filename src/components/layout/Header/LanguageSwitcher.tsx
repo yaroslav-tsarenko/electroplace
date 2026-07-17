@@ -8,7 +8,6 @@ import { useState, useRef, useEffect } from "react";
 const LOCALE_LABELS: Record<string, string> = {
   en: "EN",
   lv: "LV",
-  ru: "RU",
 };
 
 export function LanguageSwitcher() {
@@ -36,22 +35,30 @@ export function LanguageSwitcher() {
   return (
     <div ref={ref} className="relative">
       <button
-        className="inline-flex h-9 w-9 items-center justify-center rounded-full text-[color:var(--color-text-secondary)] transition-colors hover:bg-[color:var(--color-bg-secondary)] hover:text-[color:var(--color-text)]"
+        className="inline-flex items-center gap-1 rounded-full px-2 py-1 font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-[color:var(--color-text)] transition-colors hover:bg-[color:var(--color-primary-tint)] hover:text-[color:var(--color-primary)]"
         onClick={() => setOpen(!open)}
-        aria-label="Change language"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-label={`Language: ${LOCALE_LABELS[locale] ?? locale}`}
       >
-        <Globe size={18} strokeWidth={1.75} />
+        <Globe size={13} strokeWidth={1.75} />
+        <span>{LOCALE_LABELS[locale] ?? locale.toUpperCase()}</span>
       </button>
       {open && (
-        <div className="absolute right-0 top-full z-50 mt-2 min-w-[5rem] overflow-hidden rounded-lg border border-[color:var(--color-line)] bg-[color:var(--color-bg-elevated)] shadow-[0_4px_14px_rgba(28,26,23,0.06)]">
+        <div
+          role="listbox"
+          className="absolute right-0 top-full z-50 mt-1.5 min-w-[6rem] overflow-hidden rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-bg-elevated)] shadow-lg"
+        >
           {Object.entries(LOCALE_LABELS).map(([key, label]) => (
             <button
               key={key}
+              role="option"
+              aria-selected={key === locale}
               onClick={() => switchLocale(key)}
-              className={`block w-full cursor-pointer border-none px-4 py-2 text-left text-sm text-[color:var(--color-text)] hover:bg-[color:var(--color-bg-secondary)] ${
+              className={`block w-full cursor-pointer border-none px-4 py-2 text-left text-sm transition-colors ${
                 key === locale
-                  ? "bg-[color:var(--color-bg-secondary)] font-bold"
-                  : "bg-transparent font-normal"
+                  ? "bg-[color:var(--color-primary-tint)] font-semibold text-[color:var(--color-primary)]"
+                  : "bg-transparent text-[color:var(--color-text)] hover:bg-[color:var(--color-bg-secondary)]"
               }`}
             >
               {label}

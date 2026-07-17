@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { notFound } from "next/navigation";
+import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { Link } from "@/i18n/routing";
 import { ProductGrid } from "@/components/product/ProductGrid/ProductGrid";
@@ -51,7 +51,10 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
     select: { id: true, name: true, description: true, slug: true },
   });
 
-  if (!category) notFound();
+  // If the requested slug doesn't exist (stale hardcoded links, old promos,
+  // renamed vendor category), send the shopper to the main catalogue instead
+  // of hitting a dead-end 404.
+  if (!category) redirect(`/${locale}/catalog`);
 
   const categoryIds = await getDescendantCategoryIds(category.id);
 

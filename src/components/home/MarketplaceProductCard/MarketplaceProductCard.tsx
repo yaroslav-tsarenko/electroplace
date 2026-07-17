@@ -4,7 +4,7 @@ import Image from "next/image";
 import { Link } from "@/i18n/routing";
 import { Heart, ShoppingBag, Star, Eye } from "lucide-react";
 import { useCart } from "@/providers/CartProvider";
-import { formatPrice } from "@/lib/utils/format-price";
+import { PriceDisplay } from "@/components/shared/PriceDisplay/PriceDisplay";
 import { getProductImage, getProductImageFallback } from "@/lib/utils/product-image";
 
 interface Props {
@@ -57,13 +57,13 @@ export function MarketplaceProductCard({ product }: Props) {
       href={`/product/${product.slug}`}
       className="group flex h-full flex-col overflow-hidden rounded-2xl border border-[color:var(--color-line)] bg-[color:var(--color-bg-elevated)] transition-all duration-300 hover:-translate-y-0.5 hover:border-[color:var(--color-line-strong)] hover:shadow-[0_10px_28px_rgba(28,26,23,0.08)]"
     >
-      <div className="relative aspect-square overflow-hidden bg-[color:var(--color-bg)]">
+      <div className="relative aspect-square overflow-hidden bg-[rgb(252,252,252)]">
         <Image
           src={imgSrc}
           alt={product.images?.[0]?.alt || product.name}
           width={280}
           height={280}
-          className="h-full w-full object-contain p-5 mix-blend-multiply transition-transform duration-500 group-hover:scale-[1.04] dark:mix-blend-normal"
+          className="h-full w-full object-contain p-5 transition-transform duration-500 group-hover:scale-[1.04]"
           onError={(e) => {
             (e.target as HTMLImageElement).src = getProductImageFallback();
           }}
@@ -121,20 +121,7 @@ export function MarketplaceProductCard({ product }: Props) {
         </div>
 
         <div className="mt-auto flex items-end justify-between gap-2 pt-2">
-          <div className="flex flex-col leading-tight">
-            <span
-              className={`text-base font-semibold tracking-tight ${
-                hasDiscount ? "text-[color:var(--color-accent)]" : "text-[color:var(--color-text)]"
-              }`}
-            >
-              {formatPrice(price)}
-            </span>
-            {hasDiscount && (
-              <span className="text-[11px] text-[color:var(--color-text-tertiary)] line-through">
-                {formatPrice(comparePrice!)}
-              </span>
-            )}
-          </div>
+          <PriceDisplay price={price} comparePrice={comparePrice} size="sm" />
           <button
             onClick={handleAddToCart}
             disabled={!inStock}

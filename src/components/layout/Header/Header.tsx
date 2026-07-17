@@ -1,11 +1,10 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import NextLink from "next/link";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
-import { useRouter } from "next/navigation";
-import { Link } from "@/i18n/routing";
+import { Link, useRouter } from "@/i18n/routing";
 import {
   ShoppingBag,
   Search,
@@ -40,10 +39,12 @@ import {
 } from "lucide-react";
 import { useCart } from "@/providers/CartProvider";
 import { useAuth } from "@/providers/AuthProvider";
+import { useCurrency } from "@/providers/CurrencyProvider";
 import { ThemeToggle } from "./ThemeToggle";
 import { AnimatePresence, motion } from "framer-motion";
 import { ElectroplaceLogo } from "../ElectroplaceLogo";
 import { CurrencySwitcher } from "./CurrencySwitcher";
+import { LanguageSwitcher } from "./LanguageSwitcher";
 
 interface Category {
   id: string;
@@ -99,9 +100,9 @@ const DEPARTMENTS: Array<{
     ],
     promo: {
       title: "MacBook & Surface",
-      subtitle: "0% APR interest-free finance available",
+      subtitle: "Interest-free finance available on selected models",
       href: "/catalog/laptops-computers",
-      badge: "0% APR",
+      badge: "Finance",
     },
   },
   {
@@ -258,6 +259,29 @@ const SEARCH_SCOPES = [
   ...DEPARTMENTS.map((d) => ({ value: d.slug, label: d.short })),
 ];
 
+// Fallback icon lookup for arbitrary categories fetched from the DB. Keyed by
+// substrings of the category slug so that whatever the vendor feed emitted, we
+// can pick something reasonable.
+const CATEGORY_ICON_HINTS: Array<{ match: RegExp; Icon: React.ElementType }> = [
+  { match: /audio|headphone|speaker|hi-?fi|sound/, Icon: Headphones },
+  { match: /laptop|computer|notebook|pc|desktop|monitor/, Icon: Laptop2 },
+  { match: /phone|smartphone|mobile/, Icon: Smartphone },
+  { match: /tv|video|projector/, Icon: Tv },
+  { match: /camera|photo|drone|lens/, Icon: Camera },
+  { match: /home|smart-home|light|robot|vacuum|hoover/, Icon: HomeIcon },
+  { match: /game|gaming|console|playstation|xbox|nintendo/, Icon: Gamepad2 },
+  { match: /watch|wearable|band|fit/, Icon: Watch },
+  { match: /cable|charger|adapter|accessor|case|power/, Icon: Cable },
+];
+
+function iconForCategory(slug: string, name: string): React.ElementType {
+  const key = `${slug} ${name}`.toLowerCase();
+  for (const hint of CATEGORY_ICON_HINTS) {
+    if (hint.match.test(key)) return hint.Icon;
+  }
+  return LayoutGrid;
+}
+
 const ROTATING_PROMOS = [
   { icon: Sparkles, text: "Personal concierge — book a private consultation" },
   { icon: Truck, text: "Complimentary UK delivery on orders over £50" },
@@ -292,11 +316,12 @@ export function Header() {
   const items = cart.items;
   const subtotal = cart.subtotal;
   const { user, role } = useAuth();
+  const { currency, symbol, convert } = useCurrency();
 
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [deptOpen, setDeptOpen] = useState(false);
-  const [activeDept, setActiveDept] = useState<string>(DEPARTMENTS[0].slug);
+  const [activeDept, setActiveDept] = useState<string | null>(null);
   const [accountOpen, setAccountOpen] = useState(false);
   const [miniCartOpen, setMiniCartOpen] = useState(false);
   const [scope, setScope] = useState<string>("all");
@@ -366,16 +391,79 @@ export function Header() {
     if (!q) return;
     pushRecent(q);
     const scopePath = scope === "all" ? "" : `&category=${scope}`;
-    router.push(`/en/search?q=${encodeURIComponent(q)}${scopePath}`);
+    router.push(`/search?q=${encodeURIComponent(q)}${scopePath}`);
     setSearchFocus(false);
   };
 
-  const findLiveDept = useCallback(
-    (slug: string) => categories.find((c) => c.slug === slug),
-    [categories],
-  );
-  const activeDeptData = DEPARTMENTS.find((d) => d.slug === activeDept)!;
-  const activeDeptLive = findLiveDept(activeDept);
+  // Prefer the real category tree (imported from the vendor feed) as the
+  // authoritative department list — anything hard-coded here can point at a
+  // slug that doesn't exist in the DB, producing 404s in the mega menu.
+  interface DeptView {
+    slug: string;
+    name: string;
+    short: string;
+    Icon: React.ElementType;
+    tagline: string;
+    productCount: number;
+    children: { name: string; slug: string; count: number }[];
+    promo: { title: string; subtitle: string; badge: string };
+  }
+
+  const menuDepartments: DeptView[] = categories.length > 0
+    ? categories
+        .filter((c) => (c._count?.products ?? 0) > 0 || (c.children?.length ?? 0) > 0)
+        .slice(0, 12)
+        .map((c) => {
+          const hardcoded = DEPARTMENTS.find((d) => d.slug === c.slug);
+          return {
+            slug: c.slug,
+            name: c.name,
+            short: hardcoded?.short ?? c.name.split(/[ &/]/)[0],
+            Icon: hardcoded?.Icon ?? iconForCategory(c.slug, c.name),
+            tagline:
+              hardcoded?.tagline ??
+              `Shop ${c.name.toLowerCase()} — curated by our editors.`,
+            productCount: c._count?.products ?? 0,
+            children:
+              (c.children ?? []).map((child) => ({
+                name: child.name,
+                slug: child.slug,
+                count: child._count?.products ?? 0,
+              })) || [],
+            promo: hardcoded?.promo
+              ? {
+                  title: hardcoded.promo.title,
+                  subtitle: hardcoded.promo.subtitle,
+                  badge: hardcoded.promo.badge,
+                }
+              : {
+                  title: `${c.name} concierge`,
+                  subtitle: "Free expert advice, delivery and setup.",
+                  badge: "Curated",
+                },
+          };
+        })
+    : DEPARTMENTS.map((d) => ({
+        slug: d.slug,
+        name: d.name,
+        short: d.short,
+        Icon: d.Icon,
+        tagline: d.tagline,
+        productCount: 0,
+        children: [],
+        promo: {
+          title: d.promo.title,
+          subtitle: d.promo.subtitle,
+          badge: d.promo.badge,
+        },
+      }));
+
+  const resolvedActiveSlug =
+    (activeDept && menuDepartments.find((d) => d.slug === activeDept)?.slug) ||
+    menuDepartments[0]?.slug ||
+    "";
+  const activeDeptData =
+    menuDepartments.find((d) => d.slug === resolvedActiveSlug) ?? menuDepartments[0];
 
   const accountDismissRef = useDropdownDismiss(() => setAccountOpen(false));
   const cartDismissRef = useDropdownDismiss(() => setMiniCartOpen(false));
@@ -404,26 +492,22 @@ export function Header() {
           ].join(" ")}
           aria-hidden={scrolled}
         >
-          <div className="relative mx-auto flex h-10 max-w-[1280px] items-center justify-between px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center gap-4">
-              <Link href="/contact" className="inline-flex items-center gap-1.5 text-[11px] font-medium tracking-wide transition-colors hover:text-[color:var(--color-primary)]">
+          <div className="mx-auto grid h-10 max-w-[1280px] grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-4 sm:px-6 lg:gap-6 lg:px-8">
+            <div className="flex min-w-0 items-center gap-4">
+              <Link href="/contact" className="inline-flex items-center gap-1.5 whitespace-nowrap text-[11px] font-medium tracking-wide transition-colors hover:text-[color:var(--color-primary)]">
                 <HelpCircle size={12} /> Help centre
               </Link>
-              <span className="h-3 w-px bg-[color:var(--color-text)]/15" />
-              <Link href="/account/orders" className="inline-flex items-center gap-1.5 text-[11px] font-medium tracking-wide transition-colors hover:text-[color:var(--color-primary)]">
+              <span className="hidden h-3 w-px bg-[color:var(--color-text)]/15 sm:inline-block" />
+              <Link href="/account/orders" className="hidden items-center gap-1.5 whitespace-nowrap text-[11px] font-medium tracking-wide transition-colors hover:text-[color:var(--color-primary)] sm:inline-flex">
                 <Package size={12} /> Order tracking
               </Link>
-              <span className="hidden h-3 w-px bg-[color:var(--color-text)]/15 sm:inline-block" />
-              <Link href="/contact" className="hidden items-center gap-1.5 text-[11px] font-medium tracking-wide transition-colors hover:text-[color:var(--color-primary)] sm:inline-flex">
-                <MapPin size={12} /> Stock finder
-              </Link>
               <span className="hidden h-3 w-px bg-[color:var(--color-text)]/15 md:inline-block" />
-              <Link href="/contact" className="hidden items-center gap-1.5 text-[11px] font-medium tracking-wide transition-colors hover:text-[color:var(--color-primary)] md:inline-flex">
-                <Sparkles size={12} className="text-[color:var(--color-primary)]" /> Concierge · free expert setup
+              <Link href="/contact" className="hidden items-center gap-1.5 whitespace-nowrap text-[11px] font-medium tracking-wide transition-colors hover:text-[color:var(--color-primary)] md:inline-flex">
+                <MapPin size={12} /> Stock finder
               </Link>
             </div>
 
-            <div className="pointer-events-none absolute left-1/2 hidden -translate-x-1/2 items-center gap-2 text-[11px] font-medium tracking-wide text-[color:var(--color-text)]/90 lg:inline-flex">
+            <div className="pointer-events-none hidden min-w-0 justify-center overflow-hidden text-[11px] font-medium tracking-wide text-[color:var(--color-text)]/90 xl:flex">
               <AnimatePresence mode="wait">
                 <motion.span
                   key={promoIdx}
@@ -431,14 +515,14 @@ export function Header() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -8 }}
                   transition={{ duration: 0.25 }}
-                  className="inline-flex items-center gap-1.5"
+                  className="inline-flex min-w-0 max-w-full items-center gap-1.5 truncate whitespace-nowrap"
                 >
                   {(() => {
                     const P = ROTATING_PROMOS[promoIdx];
                     return (
                       <>
-                        <P.icon size={12} className="text-[color:var(--color-primary)]" />
-                        <span>{P.text}</span>
+                        <P.icon size={12} className="shrink-0 text-[color:var(--color-primary)]" />
+                        <span className="truncate">{P.text}</span>
                       </>
                     );
                   })()}
@@ -446,13 +530,11 @@ export function Header() {
               </AnimatePresence>
             </div>
 
-            <div className="flex items-center gap-2 text-[color:var(--color-text)]">
+            <div className="flex items-center justify-end gap-2 text-[color:var(--color-text)]">
               <ThemeToggle />
               <span className="hidden h-3 w-px bg-[color:var(--color-text)]/15 sm:inline-block" />
-              <CurrencySwitcher />
-              <span className="hidden h-3 w-px bg-[color:var(--color-text)]/15 sm:inline-block" />
-              <span className="hidden font-mono text-[10px] uppercase tracking-[0.16em] text-[color:var(--color-text)]/60 sm:inline">
-                UK · EN · GBP £
+              <span className="hidden whitespace-nowrap font-mono text-[10px] uppercase tracking-[0.16em] text-[color:var(--color-text)]/60 sm:inline">
+                UK · {currency} {symbol}
               </span>
             </div>
           </div>
@@ -617,7 +699,7 @@ export function Header() {
                             onMouseDown={(e) => {
                               e.preventDefault();
                               setSearchQuery(q);
-                              router.push(`/en/search?q=${encodeURIComponent(q)}`);
+                              router.push(`/search?q=${encodeURIComponent(q)}`);
                               setSearchFocus(false);
                             }}
                             className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm text-[color:var(--color-text)] hover:bg-[color:var(--color-bg-secondary)]"
@@ -631,7 +713,7 @@ export function Header() {
                     <div className="px-2 pb-1 pt-1 font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-bronze)]">
                       Popular departments
                     </div>
-                    {DEPARTMENTS.slice(0, 6).map((d) => (
+                    {menuDepartments.slice(0, 6).map((d) => (
                       <Link
                         key={d.slug}
                         href={`/catalog/${d.slug}`}
@@ -652,6 +734,14 @@ export function Header() {
 
             {/* RIGHT CLUSTER — account / compare / wishlist / basket */}
             <div className="hidden items-center gap-1 lg:flex">
+              {/* Currency + Language — always visible, so shoppers can flip them
+                  from any scroll position without opening the utility strip. */}
+              <div className="mr-1 flex items-center gap-1 rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-bg-elevated)] px-1.5 py-1 text-[color:var(--color-text)]">
+                <CurrencySwitcher />
+                <span className="h-4 w-px bg-[color:var(--color-border)]" />
+                <LanguageSwitcher />
+              </div>
+
               {/* Account */}
               <div
                 ref={accountDismissRef}
@@ -802,7 +892,7 @@ export function Header() {
                       Basket
                     </span>
                     <span className="font-mono text-[12px] font-semibold tabular-nums">
-                      £{subtotal.toFixed(2)}
+                      {symbol}{convert(subtotal).toFixed(2)}
                     </span>
                   </span>
                 </Link>
@@ -821,7 +911,7 @@ export function Header() {
                           Basket · {itemCount} item{itemCount === 1 ? "" : "s"}
                         </span>
                         <span className="font-mono text-[13px] font-bold tabular-nums text-[color:var(--color-primary)]">
-                          £{subtotal.toFixed(2)}
+                          {symbol}{convert(subtotal).toFixed(2)}
                         </span>
                       </div>
                       {items.length === 0 ? (
@@ -836,7 +926,7 @@ export function Header() {
                                 key={it.productId}
                                 className="flex items-center gap-3 rounded-lg border border-[color:var(--color-border)] p-2"
                               >
-                                <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-md bg-[color:var(--color-bg-secondary)]">
+                                <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-md bg-[rgb(252,252,252)]">
                                   {it.imageUrl && (
                                     <Image
                                       src={it.imageUrl}
@@ -852,7 +942,7 @@ export function Header() {
                                     {it.name}
                                   </div>
                                   <div className="mt-0.5 font-mono text-[11px] tabular-nums text-[color:var(--color-text-tertiary)]">
-                                    {it.quantity} × £{it.price.toFixed(2)}
+                                    {it.quantity} × {symbol}{convert(it.price).toFixed(2)}
                                   </div>
                                 </div>
                                 <button
@@ -892,6 +982,27 @@ export function Header() {
                 </AnimatePresence>
               </div>
             </div>
+          </div>
+
+          {/* Mobile — cart + currency/language always reachable */}
+          <div className="ml-auto flex items-center gap-1 lg:hidden">
+            <div className="flex items-center gap-1 rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-bg-elevated)] px-1.5 py-1">
+              <CurrencySwitcher />
+              <span className="h-4 w-px bg-[color:var(--color-border)]" />
+              <LanguageSwitcher />
+            </div>
+            <Link
+              href="/cart"
+              className="relative inline-flex h-10 items-center justify-center rounded-full bg-[color:var(--color-primary)] px-3 text-[color:var(--color-primary-fg)]"
+              aria-label={t("cart")}
+            >
+              <ShoppingBag size={17} strokeWidth={1.75} />
+              {itemCount > 0 && (
+                <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#1A1714] px-1 font-mono text-[9px] font-bold tabular-nums text-[color:var(--color-primary)] ring-2 ring-[color:var(--color-primary)]">
+                  {itemCount > 99 ? "99+" : itemCount}
+                </span>
+              )}
+            </Link>
           </div>
 
           {/* Mobile search row */}
@@ -965,9 +1076,8 @@ export function Header() {
                   </button>
                 </div>
                 <ul className="flex-1 overflow-y-auto py-2">
-                  {DEPARTMENTS.map((d) => {
-                    const live = findLiveDept(d.slug);
-                    const isActive = activeDept === d.slug;
+                  {menuDepartments.map((d) => {
+                    const isActive = resolvedActiveSlug === d.slug;
                     return (
                       <li key={d.slug}>
                         <button
@@ -976,7 +1086,7 @@ export function Header() {
                           onFocus={() => setActiveDept(d.slug)}
                           onClick={() => {
                             setDeptOpen(false);
-                            router.push(`/en/catalog/${d.slug}`);
+                            router.push(`/catalog/${d.slug}`);
                           }}
                           className={[
                             "group flex w-full items-center justify-between gap-3 px-5 py-3 text-left text-[13.5px] font-semibold transition-colors",
@@ -994,9 +1104,9 @@ export function Header() {
                             </span>
                             <span className="flex flex-col leading-tight">
                               <span>{d.name}</span>
-                              {live?._count?.products ? (
+                              {d.productCount > 0 ? (
                                 <span className="font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-[color:var(--color-text-tertiary)]">
-                                  {live._count.products.toLocaleString()} products
+                                  {d.productCount.toLocaleString()} products
                                 </span>
                               ) : null}
                             </span>
@@ -1046,39 +1156,39 @@ export function Header() {
                       <div className="mb-2 font-mono text-[10px] font-semibold uppercase tracking-[0.20em] text-[color:var(--color-bronze)]">
                         Shop by category
                       </div>
-                      <div className="grid grid-cols-2 gap-x-6 gap-y-1">
-                        {(activeDeptLive?.children?.length
-                          ? activeDeptLive.children.map((sub) => ({
-                              label: sub.name,
-                              slug: sub.slug,
-                              count: sub._count?.products,
-                            }))
-                          : activeDeptData.featured.map((f) => ({
-                              label: f.label,
-                              slug: f.slug,
-                              count: undefined,
-                            }))
-                        ).map((sub) => (
-                          <Link
-                            key={sub.slug + sub.label}
-                            href={`/catalog/${sub.slug}`}
-                            onClick={() => setDeptOpen(false)}
-                            className="group flex items-center justify-between rounded-md px-2 py-1.5 text-[13.5px] text-[color:var(--color-text)] transition-colors hover:bg-[color:var(--color-primary-tint)] hover:text-[color:var(--color-primary)]"
-                          >
-                            <span>{sub.label}</span>
-                            {typeof sub.count === "number" ? (
-                              <span className="font-mono text-[11px] tabular-nums text-[color:var(--color-text-tertiary)]">
-                                {sub.count}
-                              </span>
-                            ) : (
-                              <ChevronRight
-                                size={12}
-                                className="opacity-0 transition-opacity group-hover:opacity-100"
-                              />
-                            )}
-                          </Link>
-                        ))}
-                      </div>
+                      {activeDeptData.children.length > 0 ? (
+                        <div className="grid grid-cols-2 gap-x-6 gap-y-1">
+                          {activeDeptData.children.map((sub) => (
+                            <Link
+                              key={sub.slug + sub.name}
+                              href={`/catalog/${sub.slug}`}
+                              onClick={() => setDeptOpen(false)}
+                              className="group flex items-center justify-between rounded-md px-2 py-1.5 text-[13.5px] text-[color:var(--color-text)] transition-colors hover:bg-[color:var(--color-primary-tint)] hover:text-[color:var(--color-primary)]"
+                            >
+                              <span>{sub.name}</span>
+                              {sub.count > 0 ? (
+                                <span className="font-mono text-[11px] tabular-nums text-[color:var(--color-text-tertiary)]">
+                                  {sub.count}
+                                </span>
+                              ) : (
+                                <ChevronRight
+                                  size={12}
+                                  className="opacity-0 transition-opacity group-hover:opacity-100"
+                                />
+                              )}
+                            </Link>
+                          ))}
+                        </div>
+                      ) : (
+                        <Link
+                          href={`/catalog/${activeDeptData.slug}`}
+                          onClick={() => setDeptOpen(false)}
+                          className="inline-flex items-center gap-2 rounded-md bg-[color:var(--color-primary-tint)] px-3 py-2 text-[13px] font-semibold text-[color:var(--color-primary)] hover:bg-[color:var(--color-primary)] hover:text-[color:var(--color-primary-fg)]"
+                        >
+                          Shop all {activeDeptData.short}
+                          <ArrowRight size={12} />
+                        </Link>
+                      )}
                     </div>
 
                     <div className="border-t border-[color:var(--color-border)] pt-4">
@@ -1102,7 +1212,7 @@ export function Header() {
 
                   {/* Promo tile — warm-amber editorial */}
                   <Link
-                    href={activeDeptData.promo.href}
+                    href={`/catalog/${activeDeptData.slug}`}
                     onClick={() => setDeptOpen(false)}
                     className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-[color:var(--color-border)] bg-gradient-to-br from-[#2C271F] via-[#3A2E1C] to-[#26221E] p-5 text-[color:var(--color-text)]"
                   >
@@ -1163,8 +1273,7 @@ export function Header() {
                   <div className="px-2 py-2 font-mono text-[10px] font-semibold uppercase tracking-[0.20em] text-[color:var(--color-bronze)]">
                     Shop by department
                   </div>
-                  {DEPARTMENTS.map((d) => {
-                    const live = findLiveDept(d.slug);
+                  {menuDepartments.map((d) => {
                     const isOpen = mobileAcc === d.slug;
                     return (
                       <div
@@ -1203,22 +1312,17 @@ export function Header() {
                                 >
                                   Shop all {d.short}
                                 </Link>
-                                {(live?.children ?? d.featured.map((f, i) => ({
-                                  id: String(i),
-                                  slug: f.slug,
-                                  name: f.label,
-                                  _count: { products: 0 },
-                                }))).map((sub) => (
+                                {d.children.map((sub) => (
                                   <Link
-                                    key={sub.id}
+                                    key={sub.slug}
                                     href={`/catalog/${sub.slug}`}
                                     onClick={() => setMobileOpen(false)}
                                     className="flex items-center justify-between rounded-md px-2 py-1.5 text-sm text-[color:var(--color-text)] hover:bg-[color:var(--color-bg-secondary)]"
                                   >
                                     {sub.name}
-                                    {sub._count?.products ? (
+                                    {sub.count > 0 ? (
                                       <span className="font-mono text-[10px] tabular-nums text-[color:var(--color-text-tertiary)]">
-                                        {sub._count.products}
+                                        {sub.count}
                                       </span>
                                     ) : null}
                                   </Link>

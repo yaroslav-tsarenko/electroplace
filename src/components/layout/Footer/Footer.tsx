@@ -1,16 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/routing";
-import {
-  FaLinkedinIn,
-  FaInstagram,
-  FaXTwitter,
-  FaYoutube,
-  FaFacebookF,
-  FaTiktok,
-} from "react-icons/fa6";
+import { FaInstagram } from "react-icons/fa6";
 import {
   ArrowRight,
   Mail,
@@ -23,7 +16,6 @@ import {
   Repeat,
   Award,
   Lock,
-  Star,
   ChevronDown,
   Percent,
   Sparkles,
@@ -31,6 +23,7 @@ import {
 } from "lucide-react";
 import { ElectroplaceLogo } from "../ElectroplaceLogo";
 import { brand } from "@/lib/brand";
+import { useCurrency } from "@/providers/CurrencyProvider";
 import visaLogo from "@/assets/visa-logo.svg";
 import mastercardLogo from "@/assets/mastercard-logo.svg";
 import pciDssLogo from "@/assets/pci-dss-compliant-logo-vector.svg";
@@ -47,16 +40,11 @@ import pciDssLogo from "@/assets/pci-dss-compliant-logo-vector.svg";
  *      country/currency selector · Privacy/Terms/Cookies
  */
 
-const departmentLinks = [
-  { href: "/catalog/audio-headphones",     label: "Audio & Headphones" },
-  { href: "/catalog/laptops-computers",    label: "Laptops & Computers" },
-  { href: "/catalog/smartphones",          label: "Smartphones" },
-  { href: "/catalog/tv-video",             label: "TV & Video" },
-  { href: "/catalog/cameras-photography",  label: "Cameras & Photography" },
-  { href: "/catalog/smart-home",           label: "Smart Home" },
-  { href: "/catalog/gaming",               label: "Gaming" },
-  { href: "/catalog/wearables",            label: "Wearables" },
-  { href: "/catalog/accessories",          label: "Accessories" },
+// Fallback links — only shown if the API doesn't return any categories. The
+// live list below overrides this at runtime, so we point to /catalog root to
+// avoid 404s when the vendor feed hasn't been imported yet.
+const fallbackDepartmentLinks = [
+  { href: "/catalog", label: "Browse full catalogue" },
 ];
 
 const customerServiceLinks = [
@@ -102,12 +90,11 @@ const trustBadges = [
 ];
 
 const socialLinks = [
-  { icon: FaLinkedinIn, label: "LinkedIn",  env: process.env.NEXT_PUBLIC_LINKEDIN_URL },
-  { icon: FaInstagram,  label: "Instagram", env: process.env.NEXT_PUBLIC_INSTAGRAM_URL },
-  { icon: FaXTwitter,   label: "X",         env: process.env.NEXT_PUBLIC_TWITTER_URL },
-  { icon: FaFacebookF,  label: "Facebook",  env: process.env.NEXT_PUBLIC_FACEBOOK_URL },
-  { icon: FaYoutube,    label: "YouTube",   env: process.env.NEXT_PUBLIC_YOUTUBE_URL },
-  { icon: FaTiktok,     label: "TikTok",    env: process.env.NEXT_PUBLIC_TIKTOK_URL },
+  {
+    icon: FaInstagram,
+    label: "Instagram · @electroplace.uk",
+    href: "https://www.instagram.com/electroplace.uk/",
+  },
 ];
 
 interface Group {
@@ -116,11 +103,10 @@ interface Group {
   items: Array<{ href: string; label: string }>;
 }
 
-const groups: Group[] = [
-  { key: "shop",     title: "Shop by department", items: departmentLinks },
-  { key: "service",  title: "Customer service",   items: customerServiceLinks },
-  { key: "company",  title: "Company",            items: companyLinks },
-  { key: "help",     title: "Help & legal",       items: helpLegalLinks },
+const staticGroups: Group[] = [
+  { key: "service", title: "Customer service", items: customerServiceLinks },
+  { key: "company", title: "Company",           items: companyLinks },
+  { key: "help",    title: "Help & legal",      items: helpLegalLinks },
 ];
 
 function LinkGroup({ group }: { group: Group }) {
@@ -167,11 +153,42 @@ function LinkGroup({ group }: { group: Group }) {
   );
 }
 
+interface LiveCategory {
+  id: string;
+  name: string;
+  slug: string;
+  _count?: { products: number };
+}
+
 export function Footer() {
   const t = useTranslations("footer");
+  const { currency, symbol } = useCurrency();
   const currentYear = new Date().getFullYear();
   const [email, setEmail] = useState("");
   const [subscribed, setSubscribed] = useState(false);
+  const [liveCategories, setLiveCategories] = useState<LiveCategory[]>([]);
+
+  useEffect(() => {
+    fetch("/api/categories")
+      .then((r) => r.json())
+      .then((data) => {
+        if (Array.isArray(data)) setLiveCategories(data);
+      })
+      .catch(() => {});
+  }, []);
+
+  const departmentLinks =
+    liveCategories.length > 0
+      ? liveCategories.slice(0, 9).map((c) => ({
+          href: `/catalog/${c.slug}`,
+          label: c.name,
+        }))
+      : fallbackDepartmentLinks;
+
+  const groups: Group[] = [
+    { key: "shop", title: "Shop by department", items: departmentLinks },
+    ...staticGroups,
+  ];
 
   return (
     <footer className="mt-auto" role="contentinfo">
@@ -384,20 +401,20 @@ export function Footer() {
               We accept:
             </span>
             {[
-              { src: visaLogo, alt: "Visa" },
-              { src: mastercardLogo, alt: "Mastercard" },
-              { src: pciDssLogo, alt: "PCI DSS Compliant" },
-            ].map(({ src, alt }) => (
+              { src: visaLogo, alt: "Visa", height: 22 },
+              { src: mastercardLogo, alt: "Mastercard", height: 20 },
+              { src: pciDssLogo, alt: "PCI DSS Compliant", height: 26 },
+            ].map(({ src, alt, height }) => (
               <span
                 key={alt}
-                className="inline-flex h-9 items-center rounded-lg border border-[color:var(--color-border)] bg-[#F4EFE8] px-2.5"
+                className="inline-flex h-10 items-center rounded-lg border border-[color:var(--color-border)] bg-[#F4EFE8] px-3"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={src.src}
                   alt={alt}
                   style={{
-                    height: 18,
+                    height,
                     width: "auto",
                     maxWidth: "none",
                     display: "inline-block",
@@ -406,55 +423,36 @@ export function Footer() {
                 />
               </span>
             ))}
-            {["PayPal", "Klarna", "Apple Pay"].map((p) => (
-              <span
-                key={p}
-                className="inline-flex h-9 items-center rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-bg-elevated)] px-3 font-mono text-[10.5px] font-bold uppercase tracking-[0.14em] text-[color:var(--color-text)]/85"
-              >
-                {p}
-              </span>
-            ))}
-            <span className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-bg-elevated)] px-2.5 font-mono text-[10.5px] font-bold uppercase tracking-[0.14em] text-[color:var(--color-text)]/85">
+            <span className="inline-flex h-10 items-center gap-1.5 rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-bg-elevated)] px-3 font-mono text-[10.5px] font-bold uppercase tracking-[0.14em] text-[color:var(--color-text)]/85">
               <Lock size={11} className="text-[color:var(--color-teal)]" />
               256-bit SSL
             </span>
-            <span className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-bg-elevated)] px-2.5 font-mono text-[10.5px] font-bold uppercase tracking-[0.14em] text-[color:var(--color-text)]/85">
+            <span className="inline-flex h-10 items-center gap-1.5 rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-bg-elevated)] px-3 font-mono text-[10.5px] font-bold uppercase tracking-[0.14em] text-[color:var(--color-text)]/85">
               <Award size={11} className="text-[color:var(--color-primary)]" />
               Buyer protection
             </span>
           </div>
 
-          {/* Rating + social */}
-          <div className="flex flex-wrap items-center gap-4">
-            <div className="inline-flex items-center gap-2 rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-bg-elevated)] px-3 py-2">
-              <div className="flex items-center gap-0.5 text-[color:var(--color-primary)]">
-                {[0, 1, 2, 3, 4].map((i) => (
-                  <Star key={i} size={12} className="fill-current" strokeWidth={0} />
-                ))}
-              </div>
-              <span className="font-mono text-[13px] font-bold tabular-nums text-[color:var(--color-text)]">
-                4.9
-              </span>
-              <span className="font-mono text-[10.5px] uppercase tracking-[0.14em] text-[color:var(--color-text-secondary)]">
-                Trustpilot · 12,400 reviews
-              </span>
-            </div>
-            <div className="flex items-center gap-1">
-              {socialLinks
-                .filter((s) => s.env)
-                .map(({ icon: Icon, label, env }) => (
-                  <a
-                    key={label}
-                    href={env}
-                    aria-label={label}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-bg-elevated)] text-[color:var(--color-text)]/70 transition-all hover:border-[color:var(--color-primary)] hover:text-[color:var(--color-primary)]"
-                  >
-                    <Icon size={12} />
-                  </a>
-                ))}
-            </div>
+          {/* Social */}
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="mr-1 font-mono text-[10.5px] font-semibold uppercase tracking-[0.20em] text-[color:var(--color-bronze)]">
+              Follow us:
+            </span>
+            {socialLinks.map(({ icon: Icon, label, href }) => (
+              <a
+                key={label}
+                href={href}
+                aria-label={label}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex h-9 items-center gap-2 rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-bg-elevated)] px-3 text-[color:var(--color-text)]/85 transition-all hover:border-[color:var(--color-primary)] hover:text-[color:var(--color-primary)]"
+              >
+                <Icon size={13} />
+                <span className="font-mono text-[10.5px] font-semibold uppercase tracking-[0.14em]">
+                  @electroplace.uk
+                </span>
+              </a>
+            ))}
           </div>
         </div>
       </div>
@@ -475,7 +473,7 @@ export function Footer() {
           <div className="flex flex-col gap-2 md:items-end">
             <div className="inline-flex items-center gap-2 rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-bg-elevated)] px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.14em] text-[color:var(--color-text)]/85">
               <Globe size={11} className="text-[color:var(--color-primary)]" />
-              <span>United Kingdom · English · GBP £</span>
+              <span>United Kingdom · English · {currency} {symbol}</span>
             </div>
             <nav aria-label="Legal" className="flex flex-wrap items-center gap-3">
               {legalLinks.map((link) => (

@@ -79,7 +79,7 @@ const slides: Slide[] = [
     eyebrow: "Workshop · Creator laptops",
     headline: "Craft-grade portables,",
     headlineAccent: "tuned for the work.",
-    sub: "From feather-light Chromebooks to studio MacBooks and creator PCs. Split with 0% APR interest-free finance at checkout.",
+    sub: "From feather-light Chromebooks to studio MacBooks and creator PCs. Interest-free finance available on selected models at checkout.",
     priceFrom: "£299",
     cta: { label: "Explore laptops", href: "/catalog/laptops-computers" },
     secondary: { label: "Compare models", href: "/catalog/laptops-computers" },
@@ -135,7 +135,7 @@ const promoTiles = [
   },
   {
     id: "trade-in",
-    eyebrow: "Trade-in · 0% APR",
+    eyebrow: "Trade-in credit",
     title: "Upgrade with credit",
     sub: "Personal valuation up to £700 credit.",
     href: "/contact",

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { Link } from "@/i18n/routing";
 import { Button } from "@/components/ui/Button";
 import { toast } from "sonner";
@@ -59,6 +59,7 @@ const INPUT_PLAIN_CLASS =
 
 export default function RegisterPage() {
   const t = useTranslations("auth");
+  const locale = useLocale();
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<FormData>(initialForm);
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
@@ -135,7 +136,7 @@ export default function RegisterPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Registration failed");
       toast.success("Account created!");
-      window.location.href = "/en/account";
+      window.location.href = `/${locale}/account`;
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Registration failed");
     } finally {

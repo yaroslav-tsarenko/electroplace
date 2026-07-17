@@ -1,6 +1,6 @@
 import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { ProductGallery } from "@/components/product/ProductGallery/ProductGallery";
 import { ProductInfo } from "@/components/product/ProductInfo/ProductInfo";
@@ -68,7 +68,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
 }
 
 export default async function ProductPage({ params }: ProductPageProps) {
-  const { slug } = await params;
+  const { slug, locale } = await params;
 
   const product = await prisma.product.findUnique({
     where: { slug },
@@ -107,7 +107,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
     },
   });
 
-  if (!product || product.status === "ARCHIVED") notFound();
+  if (!product) redirect(`/${locale}/catalog`);
+  if (product.status === "ARCHIVED") notFound();
 
   const primaryCategory = product.categories[0]?.category;
   const categoryChain = primaryCategory

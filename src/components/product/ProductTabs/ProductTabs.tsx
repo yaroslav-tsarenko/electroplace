@@ -38,6 +38,11 @@ const DESCRIPTION_CLASS = [
   "[&_ul]:mb-5 [&_ul]:mt-2 [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:mb-5 [&_ol]:mt-2 [&_ol]:list-decimal [&_ol]:pl-6",
   "[&_li]:my-1 [&_li]:leading-relaxed",
   "[&_hr]:my-6 [&_hr]:border-0 [&_hr]:border-t [&_hr]:border-[color:var(--color-line)]",
+  // Vendor spec tables emitted by the sanitizer (`table.ep-spec-table`)
+  "[&_table.ep-spec-table]:my-4 [&_table.ep-spec-table]:w-full [&_table.ep-spec-table]:border-collapse [&_table.ep-spec-table]:overflow-hidden [&_table.ep-spec-table]:rounded-xl [&_table.ep-spec-table]:border [&_table.ep-spec-table]:border-[color:var(--color-line)] [&_table.ep-spec-table]:bg-[color:var(--color-bg-elevated)]",
+  "[&_table.ep-spec-table_th]:w-[42%] [&_table.ep-spec-table_th]:border-b [&_table.ep-spec-table_th]:border-[color:var(--color-line)] [&_table.ep-spec-table_th]:bg-[color:var(--color-bg-secondary)]/60 [&_table.ep-spec-table_th]:px-4 [&_table.ep-spec-table_th]:py-2.5 [&_table.ep-spec-table_th]:text-left [&_table.ep-spec-table_th]:align-top [&_table.ep-spec-table_th]:font-mono [&_table.ep-spec-table_th]:text-[12px] [&_table.ep-spec-table_th]:font-semibold [&_table.ep-spec-table_th]:uppercase [&_table.ep-spec-table_th]:tracking-[0.10em] [&_table.ep-spec-table_th]:text-[color:var(--color-text-secondary)]",
+  "[&_table.ep-spec-table_td]:border-b [&_table.ep-spec-table_td]:border-[color:var(--color-line)] [&_table.ep-spec-table_td]:px-4 [&_table.ep-spec-table_td]:py-2.5 [&_table.ep-spec-table_td]:align-top [&_table.ep-spec-table_td]:text-[14px] [&_table.ep-spec-table_td]:text-[color:var(--color-text)]",
+  "[&_table.ep-spec-table_tr:last-child_td]:border-b-0 [&_table.ep-spec-table_tr:last-child_th]:border-b-0",
 ].join(" ");
 
 export function ProductTabs({ description, characteristics, reviews }: ProductTabsProps) {

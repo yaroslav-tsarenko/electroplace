@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from "react";
 
-export type Currency = "EUR" | "USD" | "GBP";
+export type Currency = "USD" | "GBP" | "EUR";
 
 interface Rates {
   USD: number;
@@ -14,15 +14,18 @@ interface CurrencyContextType {
   currency: Currency;
   setCurrency: (currency: Currency) => void;
   convert: (amountInEur: number) => number;
+  symbol: string;
   rates: Rates;
 }
 
 const DEFAULT_RATES: Rates = { EUR: 1, USD: 1.08, GBP: 0.85 };
 
+const SYMBOLS: Record<Currency, string> = { GBP: "£", USD: "$", EUR: "€" };
+
 const CurrencyContext = createContext<CurrencyContextType | undefined>(undefined);
 
 export function CurrencyProvider({ children }: { children: ReactNode }) {
-  const [currency, setCurrencyState] = useState<Currency>("EUR");
+  const [currency, setCurrencyState] = useState<Currency>("GBP");
   const [rates, setRates] = useState<Rates>(DEFAULT_RATES);
 
   useEffect(() => {
@@ -33,14 +36,21 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
     fetch("/api/exchange-rates")
-      .then((r) => r.json())
+      .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
-        if (data.rates) {
-          setRates({ EUR: 1, USD: data.rates.USD, GBP: data.rates.GBP });
+        if (cancelled || !data?.rates) return;
+        const usd = Number(data.rates.USD);
+        const gbp = Number(data.rates.GBP);
+        if (Number.isFinite(usd) && Number.isFinite(gbp) && usd > 0 && gbp > 0) {
+          setRates({ EUR: 1, USD: usd, GBP: gbp });
         }
       })
       .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const setCurrency = (c: Currency) => {
@@ -57,7 +67,9 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
   );
 
   return (
-    <CurrencyContext.Provider value={{ currency, setCurrency, convert, rates }}>
+    <CurrencyContext.Provider
+      value={{ currency, setCurrency, convert, rates, symbol: SYMBOLS[currency] }}
+    >
       {children}
     </CurrencyContext.Provider>
   );

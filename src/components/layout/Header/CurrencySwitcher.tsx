@@ -28,17 +28,24 @@ export function CurrencySwitcher() {
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen(!open)}
-        aria-label="Currency"
-        className="inline-flex items-center justify-center gap-1 rounded-md border border-current/25 px-2 py-1 text-[11px] font-semibold tracking-wide text-current/80 transition-colors hover:bg-current/10 hover:text-current"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-label={`Currency: ${current.label}`}
+        className="inline-flex items-center gap-1 rounded-full px-2 py-1 font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-[color:var(--color-text)] transition-colors hover:bg-[color:var(--color-primary-tint)] hover:text-[color:var(--color-primary)]"
       >
-        <span>{current.symbol}</span>
+        <span aria-hidden>{current.symbol}</span>
         <span>{current.code}</span>
       </button>
       {open && (
-        <div className="absolute right-0 top-full z-50 mt-1.5 min-w-[128px] overflow-hidden rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-bg-elevated)] shadow-lg">
+        <div
+          role="listbox"
+          className="absolute right-0 top-full z-50 mt-1.5 min-w-[132px] overflow-hidden rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-bg-elevated)] shadow-lg"
+        >
           {CURRENCIES.map((c) => (
             <button
               key={c.code}
+              role="option"
+              aria-selected={c.code === currency}
               onClick={() => {
                 setCurrency(c.code);
                 setOpen(false);
