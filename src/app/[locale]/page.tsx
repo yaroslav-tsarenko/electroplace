@@ -327,17 +327,38 @@ async function getHomeData() {
 
     const brandSections = getBrandSections(brandProducts, TOP_BRANDS, 8);
 
-    const categoryShowcase = categoryTree
-      .map((node) => ({
-        id: node.id,
-        name: node.name,
-        slug: node.slug,
-        imageUrl: node.imageUrl,
-        productCount: node.descendantProductCount,
-      }))
-      .filter((c) => c.productCount > 0)
-      .sort((a, b) => b.productCount - a.productCount)
+    const showcaseNodes = categoryTree
+      .filter((node) => node.descendantProductCount > 0)
+      .sort((a, b) => b.descendantProductCount - a.descendantProductCount)
       .slice(0, 8);
+
+    // Show a real product photo from each category so the tile is always
+    // relevant — the category's own imageUrl is often unset or generic.
+    const showcaseImages = await Promise.all(
+      showcaseNodes.map(async (node) => {
+        const ids = collectDescendantIds(node);
+        const product = await prisma.product.findFirst({
+          where: {
+            status: "ACTIVE",
+            images: { some: {} },
+            categories: { some: { categoryId: { in: ids } } },
+          },
+          orderBy: { createdAt: "desc" },
+          select: {
+            images: { select: { url: true }, orderBy: { sortOrder: "asc" }, take: 1 },
+          },
+        });
+        return product?.images[0]?.url ?? node.imageUrl ?? null;
+      }),
+    );
+
+    const categoryShowcase = showcaseNodes.map((node, i) => ({
+      id: node.id,
+      name: node.name,
+      slug: node.slug,
+      imageUrl: showcaseImages[i],
+      productCount: node.descendantProductCount,
+    }));
 
     return {
       heroSlides,

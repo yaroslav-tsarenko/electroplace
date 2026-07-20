@@ -334,7 +334,19 @@ export function Header() {
   const [mobileAcc, setMobileAcc] = useState<string | null>(null);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 24);
+    let ticking = false;
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        const y = window.scrollY;
+        // Collapse as soon as scrolling starts (past 8px) and only expand once
+        // back at the very top (below 2px). The small hysteresis gap keeps the
+        // header from flip-flopping as its own collapse shifts the page height.
+        setScrolled((prev) => (prev ? y > 2 : y > 8));
+        ticking = false;
+      });
+    };
     window.addEventListener("scroll", onScroll, { passive: true });
     onScroll();
     return () => window.removeEventListener("scroll", onScroll);
@@ -476,7 +488,7 @@ export function Header() {
     <>
       <header
         className={[
-          "sticky top-0 z-40 w-full transition-all duration-300",
+          "sticky top-0 z-40 w-full transition-shadow duration-300",
           "bg-[color:var(--color-bg)]",
           scrolled
             ? "shadow-[0_1px_0_0_rgba(245,240,232,0.06),0_10px_30px_-20px_rgba(0,0,0,0.55)]"
@@ -545,7 +557,7 @@ export function Header() {
         */}
         <div className="border-b border-[color:var(--color-border)] bg-[color:var(--color-bg)]">
           <div className={[
-            "mx-auto flex max-w-[1280px] items-center gap-3 px-4 sm:px-6 lg:gap-4 lg:px-8",
+            "mx-auto flex max-w-[1280px] items-center gap-3 px-4 transition-[padding] duration-300 ease-out sm:px-6 lg:gap-4 lg:px-8",
             scrolled ? "py-2.5" : "py-4",
           ].join(" ")}>
             {/* Mobile menu trigger */}

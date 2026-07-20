@@ -114,6 +114,10 @@
 html {
   scroll-behavior: smooth;
   color-scheme: dark;
+  /* The sticky header shrinks its utility strip on scroll. Browser scroll
+     anchoring would compensate for that height change by nudging scrollY,
+     which fights the scroll threshold and makes the header jitter. Disable it. */
+  overflow-anchor: none;
 }
 
 html[data-theme="light"],
