@@ -25,7 +25,7 @@ export default function CartPage() {
   const subtotalConverted = convert(cart.subtotal);
   const qualifiesFreeShipping = subtotalConverted >= FREE_SHIPPING_THRESHOLD;
   const shippingConverted = cart.subtotal > 0 ? (qualifiesFreeShipping ? 0 : convert(5.99)) : 0;
-  const totalConverted = subtotalConverted + convert(cart.taxAmount) + shippingConverted;
+  const totalConverted = subtotalConverted + shippingConverted;
 
   return (
     <div className="mx-auto w-full max-w-[var(--max-width)] px-4 pb-16">
@@ -163,11 +163,6 @@ export default function CartPage() {
                   {shippingConverted > 0 ? formatPrice(shippingConverted, currency) : "Free"}
                 </span>
               </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-[color:var(--color-text-secondary)]">{t("tax")} (21%)</span>
-                <span className="font-medium text-[color:var(--color-text)]">{formatPrice(convert(cart.taxAmount), currency)}</span>
-              </div>
-
               {!qualifiesFreeShipping && (
                 <div className="flex items-center gap-1.5 rounded-lg bg-[color:var(--color-bg-secondary)] px-3 py-2.5 text-xs text-[color:var(--color-text-secondary)]">
                   <Truck size={14} />
