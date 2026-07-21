@@ -20,6 +20,7 @@ import { QuantitySelector } from "@/components/shared/QuantitySelector/QuantityS
 import { useCart } from "@/providers/CartProvider";
 import { useCurrency } from "@/providers/CurrencyProvider";
 import { formatPrice } from "@/lib/utils/format-price";
+import { htmlToPlainText } from "@/lib/utils/sanitize-html";
 import { useRouter } from "@/i18n/routing";
 import { toast } from "sonner";
 
@@ -190,9 +191,9 @@ export function ProductInfo({
         </div>
       </div>
 
-      {shortDescription && (
-        <p className="text-[15px] leading-relaxed text-[color:var(--color-text-secondary)]">
-          {shortDescription}
+      {shortDescription && htmlToPlainText(shortDescription) && (
+        <p className="line-clamp-5 text-[15px] leading-relaxed text-[color:var(--color-text-secondary)]">
+          {htmlToPlainText(shortDescription)}
         </p>
       )}
 
@@ -216,7 +217,7 @@ export function ProductInfo({
           )}
         </div>
         <span className="font-mono text-[11px] uppercase tracking-[0.14em] text-[color:var(--color-text-tertiary)]">
-          VAT included · Free UK shipping over £100
+          Free UK shipping over £100
         </span>
       </div>
 

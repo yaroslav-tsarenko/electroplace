@@ -103,7 +103,7 @@ export default function CheckoutPage() {
   const steps = [t("contact"), t("shipping"), t("review")];
   const selectedMethod = watch("shippingMethod");
   const selectedCountry = watch("shipping.country");
-  const availableMethods = cart.subtotal >= 100
+  const availableMethods = convert(cart.subtotal) >= 100
     ? SHIPPING_METHODS
     : SHIPPING_METHODS.filter((m) => m.key !== "free");
   const shippingPrice = SHIPPING_METHODS.find((m) => m.key === selectedMethod)?.price ?? 5.99;
@@ -114,7 +114,7 @@ export default function CheckoutPage() {
   const discountAmount = discount ? +(cart.subtotal * (discount.percent / 100)).toFixed(2) : 0;
   const discountedSubtotal = Math.max(cart.subtotal - discountAmount, 0);
   const taxOnDiscounted = +(discountedSubtotal * 0.21).toFixed(2);
-  const finalShipping = discountedSubtotal >= 100 && selectedMethod === "free" ? 0 : shippingPrice;
+  const finalShipping = convert(discountedSubtotal) >= 100 && selectedMethod === "free" ? 0 : shippingPrice;
 
   useEffect(() => {
     let cancelled = false;
@@ -214,7 +214,8 @@ export default function CheckoutPage() {
 
   if (cart.items.length === 0) return null;
 
-  const freeShippingThreshold = convert(100);
+  // Flat 100 in the selected currency (€100 / £100 / $100) to match the Terms.
+  const freeShippingThreshold = 100;
   const subtotalConverted = convert(cart.subtotal);
   const amountToFreeShipping = freeShippingThreshold - subtotalConverted;
 

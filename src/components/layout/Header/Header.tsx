@@ -40,11 +40,9 @@ import {
 import { useCart } from "@/providers/CartProvider";
 import { useAuth } from "@/providers/AuthProvider";
 import { useCurrency } from "@/providers/CurrencyProvider";
-import { ThemeToggle } from "./ThemeToggle";
 import { AnimatePresence, motion } from "framer-motion";
 import { ElectroplaceLogo } from "../ElectroplaceLogo";
 import { CurrencySwitcher } from "./CurrencySwitcher";
-import { LanguageSwitcher } from "./LanguageSwitcher";
 
 interface Category {
   id: string;
@@ -543,8 +541,6 @@ export function Header() {
             </div>
 
             <div className="flex items-center justify-end gap-2 text-[color:var(--color-text)]">
-              <ThemeToggle />
-              <span className="hidden h-3 w-px bg-[color:var(--color-text)]/15 sm:inline-block" />
               <span className="hidden whitespace-nowrap font-mono text-[10px] uppercase tracking-[0.16em] text-[color:var(--color-text)]/60 sm:inline">
                 UK · {currency} {symbol}
               </span>
@@ -750,8 +746,6 @@ export function Header() {
                   from any scroll position without opening the utility strip. */}
               <div className="mr-1 flex items-center gap-1 rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-bg-elevated)] px-1.5 py-1 text-[color:var(--color-text)]">
                 <CurrencySwitcher />
-                <span className="h-4 w-px bg-[color:var(--color-border)]" />
-                <LanguageSwitcher />
               </div>
 
               {/* Account */}
@@ -1000,8 +994,6 @@ export function Header() {
           <div className="ml-auto flex items-center gap-1 lg:hidden">
             <div className="flex items-center gap-1 rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-bg-elevated)] px-1.5 py-1">
               <CurrencySwitcher />
-              <span className="h-4 w-px bg-[color:var(--color-border)]" />
-              <LanguageSwitcher />
             </div>
             <Link
               href="/cart"

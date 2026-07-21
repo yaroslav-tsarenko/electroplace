@@ -405,7 +405,7 @@ export async function sendOrderInvoiceEmail(data: OrderEmailData): Promise<boole
       ${totalsBlock(data)}
 
       <p style="color:#999;font-size:12px;margin:24px 0 0;line-height:1.6;text-align:center;">
-        VAT is included in the prices shown where applicable. This invoice serves as proof of purchase.<br />
+        This invoice serves as proof of purchase.<br />
         For any questions, reply to this email or contact <a href="mailto:info@electroplace.co.uk" style="color:${BRAND_COLOR};">info@electroplace.co.uk</a>.
       </p>
     `,

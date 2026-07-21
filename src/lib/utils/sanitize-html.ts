@@ -137,6 +137,25 @@ function convertSpecPairsToList(html: string): string {
   return html;
 }
 
+/**
+ * Convert an HTML fragment to clean, readable plain text. Used for places that
+ * render inside a plain text node (e.g. the short lead paragraph on the PDP),
+ * where raw markup like `<br>` or vendor links would otherwise show literally.
+ */
+export function htmlToPlainText(html: string): string {
+  if (!html) return "";
+  return decodeEntities(
+    html
+      .replace(DANGEROUS_BLOCKS, "")
+      .replace(COMMENTS, "")
+      // Turn block/line breaks into spaces so words don't run together.
+      .replace(/<\s*(br|\/p|\/div|\/li|\/h[1-6]|\/tr)\s*\/?>/gi, " ")
+      .replace(/<[^>]+>/g, ""),
+  )
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 export function sanitizeProductDescription(html: string): string {
   if (!html) return "";
 

@@ -14,7 +14,6 @@ import {
   ShieldCheck,
   Globe,
   Repeat,
-  Award,
   Lock,
   ChevronDown,
   Percent,
@@ -83,7 +82,7 @@ const legalLinks = [
 ];
 
 const trustBadges = [
-  { icon: Truck,       label: "Free delivery over £50" },
+  { icon: Truck,       label: "Free delivery over £100" },
   { icon: RotateCcw,   label: "30-day easy returns" },
   { icon: ShieldCheck, label: "2-year Electroplace warranty" },
   { icon: Repeat,      label: "Trade-in credit" },
@@ -426,10 +425,6 @@ export function Footer() {
             <span className="inline-flex h-10 items-center gap-1.5 rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-bg-elevated)] px-3 font-mono text-[10.5px] font-bold uppercase tracking-[0.14em] text-[color:var(--color-text)]/85">
               <Lock size={11} className="text-[color:var(--color-teal)]" />
               256-bit SSL
-            </span>
-            <span className="inline-flex h-10 items-center gap-1.5 rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-bg-elevated)] px-3 font-mono text-[10.5px] font-bold uppercase tracking-[0.14em] text-[color:var(--color-text)]/85">
-              <Award size={11} className="text-[color:var(--color-primary)]" />
-              Buyer protection
             </span>
           </div>
 

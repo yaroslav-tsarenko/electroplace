@@ -19,7 +19,7 @@ interface LocaleLayoutProps {
 export default async function LocaleLayout({ children, params }: LocaleLayoutProps) {
   const { locale } = await params;
 
-  if (!routing.locales.includes(locale as "en" | "lv")) {
+  if (!routing.locales.includes(locale as "en")) {
     notFound();
   }
 
@@ -27,7 +27,7 @@ export default async function LocaleLayout({ children, params }: LocaleLayoutPro
 
   return (
     <NextIntlClientProvider messages={messages}>
-      <ThemeProvider>
+      <ThemeProvider forcedTheme="dark">
         <AuthProvider>
           <CurrencyProvider>
             <CartProvider>

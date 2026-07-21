@@ -19,8 +19,13 @@ export default function CartPage() {
   const { cart, updateQuantity, removeItem } = useCart();
   const { currency, convert } = useCurrency();
 
-  const freeShippingThreshold = convert(100);
+  // Free delivery threshold is a flat 100 in the currently selected currency
+  // (€100 / £100 / $100), matching the published Terms — not a converted €100.
+  const FREE_SHIPPING_THRESHOLD = 100;
   const subtotalConverted = convert(cart.subtotal);
+  const qualifiesFreeShipping = subtotalConverted >= FREE_SHIPPING_THRESHOLD;
+  const shippingConverted = cart.subtotal > 0 ? (qualifiesFreeShipping ? 0 : convert(5.99)) : 0;
+  const totalConverted = subtotalConverted + convert(cart.taxAmount) + shippingConverted;
 
   return (
     <div className="mx-auto w-full max-w-[var(--max-width)] px-4 pb-16">
@@ -60,7 +65,7 @@ export default function CartPage() {
                   {cart.itemCount} {cart.itemCount === 1 ? "item" : "items"} in your cart
                 </span>
               </div>
-              {subtotalConverted >= freeShippingThreshold && (
+              {qualifiesFreeShipping && (
                 <div className="flex items-center gap-1.5 text-xs font-semibold text-[color:var(--color-success)]">
                   <Truck size={14} />
                   Free shipping
@@ -154,8 +159,8 @@ export default function CartPage() {
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-[color:var(--color-text-secondary)]">{t("shipping")}</span>
-                <span className={`font-semibold ${cart.shippingCost === 0 ? "text-[color:var(--color-success)]" : "text-[color:var(--color-text)]"}`}>
-                  {cart.shippingCost > 0 ? formatPrice(convert(cart.shippingCost), currency) : "Free"}
+                <span className={`font-semibold ${shippingConverted === 0 ? "text-[color:var(--color-success)]" : "text-[color:var(--color-text)]"}`}>
+                  {shippingConverted > 0 ? formatPrice(shippingConverted, currency) : "Free"}
                 </span>
               </div>
               <div className="flex justify-between text-sm">
@@ -163,16 +168,16 @@ export default function CartPage() {
                 <span className="font-medium text-[color:var(--color-text)]">{formatPrice(convert(cart.taxAmount), currency)}</span>
               </div>
 
-              {subtotalConverted < freeShippingThreshold && (
+              {!qualifiesFreeShipping && (
                 <div className="flex items-center gap-1.5 rounded-lg bg-[color:var(--color-bg-secondary)] px-3 py-2.5 text-xs text-[color:var(--color-text-secondary)]">
                   <Truck size={14} />
-                  Add {formatPrice(freeShippingThreshold - subtotalConverted, currency)} more for free shipping
+                  Add {formatPrice(FREE_SHIPPING_THRESHOLD - subtotalConverted, currency)} more for free shipping
                 </div>
               )}
 
               <div className="mt-1 flex justify-between border-t-2 border-[color:var(--color-line)] pt-4 text-xl font-bold text-[color:var(--color-text)]">
                 <span>{t("total")}</span>
-                <span>{formatPrice(convert(cart.total), currency)}</span>
+                <span>{formatPrice(totalConverted, currency)}</span>
               </div>
             </div>
 

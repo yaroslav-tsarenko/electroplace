@@ -1,4 +1,5 @@
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs/Breadcrumbs";
+import { brand } from "@/lib/brand";
 import { ReactNode } from "react";
 
 interface PolicyLayoutProps {
@@ -44,6 +45,8 @@ export function ContactBlock() {
         General email: info@electroplace.co.uk
         <br />
         Wholesale (B2B): b2b@electroplace.co.uk
+        <br />
+        Telephone: {brand.contact.phone}
       </p>
     </div>
   );
